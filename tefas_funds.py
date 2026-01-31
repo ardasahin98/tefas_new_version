@@ -1,6 +1,10 @@
 import requests
 import time
+import os
+import sys
+from datetime import datetime
 from lxml import html
+import openpyxl
 
 # ------------------ DEFAULT FUND LIST ------------------
 
@@ -23,6 +27,35 @@ else:
 
 print(f"\nFunds to be processed: {fonds}\n")
 
+# ------------------ SAVE LOCATION ------------------
+
+if getattr(sys, "frozen", False):
+    base_dir = os.path.dirname(sys.executable)
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+today = datetime.now().strftime("%Y-%m-%d")
+base_filename = f"fund_values_{today}.xlsx"
+file_path = os.path.join(base_dir, base_filename)
+
+# ------------------ VERSIONING LOGIC ------------------
+
+if os.path.exists(file_path):
+    version = 1
+    while True:
+        file_path = os.path.join(
+            base_dir, f"fund_values_{today}_v{version}.xlsx"
+        )
+        if not os.path.exists(file_path):
+            break
+        version += 1
+
+# ------------------ EXCEL SETUP ------------------
+
+wb = openpyxl.Workbook()
+ws = wb.active
+ws.append(["Fund", "Price"])
+
 # ------------------ HEADERS ------------------
 
 headers = {
@@ -39,10 +72,9 @@ headers = {
 
 # ------------------ MAIN LOOP ------------------
 
-results = {}
-
 for fond_name in fonds:
-    price = None
+    price = ""
+
     url = f"https://www.tefas.gov.tr/FonAnaliz.aspx?FonKod={fond_name}"
 
     try:
@@ -51,23 +83,21 @@ for fond_name in fonds:
 
         tree = html.fromstring(response.content)
 
-        # Try multiple times (same HTML, but keeps logic consistent)
-        for _ in range(20):
-            element = tree.xpath(
-                "//*[@id='MainContent_PanelInfo']//ul/li[1]/span"
-            )
-            if element:
-                price = element[0].text_content().strip()
-                if price:
-                    break
-            time.sleep(0.5)
+        element = tree.xpath(
+            "//*[@id='MainContent_PanelInfo']//ul/li[1]/span"
+        )
+
+        if element:
+            price = element[0].text_content().strip()
 
     except requests.exceptions.RequestException as e:
         print(f"{fond_name}: request failed ({e})")
 
-    results[fond_name] = price
+    ws.append([fond_name, price])
     print(f"{fond_name}: {price}")
 
-# ------------------ SUMMARY ------------------
+# ------------------ SAVE ------------------
 
-print("\nCompleted.")
+wb.save(file_path)
+
+print(f"\nExcel file created:\n{file_path}")
