@@ -6,7 +6,7 @@ from lxml import html
 
 DEFAULT_FONDS = [
     "TI1", "TIV", "DCB", "BGP", "ALE", "TKM", "IGL", "APT",
-    "AFT", "TTA", "IOG", "GO1", "GO3", "GO4", "TE3", "TPC"
+    "AFT", "TTA", "IOG", "GO1", "GO3", "GO4", "TE3", "TPC", "AVT"
 ]
 
 # ------------------ USER INPUT ------------------
