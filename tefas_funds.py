@@ -34,21 +34,8 @@ if getattr(sys, "frozen", False):
 else:
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
-today = datetime.now().strftime("%Y-%m-%d")
-base_filename = f"fund_values_{today}.xlsx"
+base_filename = f"tefac_funds.xlsx"
 file_path = os.path.join(base_dir, base_filename)
-
-# ------------------ VERSIONING LOGIC ------------------
-
-if os.path.exists(file_path):
-    version = 1
-    while True:
-        file_path = os.path.join(
-            base_dir, f"fund_values_{today}_v{version}.xlsx"
-        )
-        if not os.path.exists(file_path):
-            break
-        version += 1
 
 # ------------------ EXCEL SETUP ------------------
 
