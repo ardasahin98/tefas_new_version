@@ -13,17 +13,51 @@ DEFAULT_FONDS = [
     "AFT", "TTA", "IOG", "GO1", "GO3", "GO4", "TE3", "TPC", "AVT"
 ]
 
+DEFAULT_TXT_FILE = "funds.txt"
+
 # ------------------ USER INPUT ------------------
 
-user_input = input(
-    "Enter fund codes (comma or space separated).\n"
-    "Press Enter to use default list:\n> "
-).strip()
+print(
+    "\nChoose input method:\n"
+    "1 - Use default fund list\n"
+    "2 - Enter fund codes manually\n"
+    "3 - Read fund codes from default txt file\n"
+)
 
-if user_input:
-    fonds = [f.strip().upper() for f in user_input.replace(",", " ").split()]
-else:
+choice = input("Enter 1, 2, or 3: ").strip()
+
+if choice == "1":
     fonds = DEFAULT_FONDS
+
+elif choice == "2":
+    user_input = input(
+        "Enter fund codes (comma or space separated):\n> "
+    ).strip()
+
+    if not user_input:
+        print("No fund codes entered.")
+        sys.exit(1)
+
+    fonds = [
+        f.strip().upper()
+        for f in user_input.replace(",", " ").split()
+    ]
+
+elif choice == "3":
+    try:
+        with open(DEFAULT_TXT_FILE, "r") as f:
+            fonds = [
+                line.strip().upper()
+                for line in f
+                if line.strip()
+            ]
+    except Exception as e:
+        print(f"Failed to read {DEFAULT_TXT_FILE}: {e}")
+        sys.exit(1)
+
+else:
+    print("Invalid choice. Please select 1, 2, or 3.")
+    sys.exit(1)
 
 print(f"\nFunds to be processed: {fonds}\n")
 
@@ -34,13 +68,14 @@ if getattr(sys, "frozen", False):
 else:
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
-base_filename = f"tefac_funds.xlsx"
+base_filename = "tefas_funds.xlsx"
 file_path = os.path.join(base_dir, base_filename)
 
 # ------------------ EXCEL SETUP ------------------
 
 wb = openpyxl.Workbook()
 ws = wb.active
+ws.title = "Funds"
 ws.append(["Fund", "Price"])
 
 # ------------------ HEADERS ------------------
@@ -82,6 +117,8 @@ for fond_name in fonds:
 
     ws.append([fond_name, price])
     print(f"{fond_name}: {price}")
+
+    time.sleep(1)
 
 # ------------------ SAVE ------------------
 
